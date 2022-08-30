@@ -16,25 +16,15 @@ x, y, z, vx, vy, vz, m, u = np.genfromtxt('/tank0/ballone/coll_set/{}/{}'.format
 
 # Calculate the position and velocity of the center of mass.
 
-indexm = np.where(m == np.amax(m))[0]
-maxmass = len(indexm)
+indexm = np.where(m >= np.amax(m)*1e-5)[0]
 
-if maxmass == 1:
-    xcm = x[np.argmax(m)]
-    ycm = y[np.argmax(m)]
-    zcm = z[np.argmax(m)]
+xcm = np.sum(x[indexm]*m[indexm]) / np.sum(m[indexm])
+ycm = np.sum(y[indexm]*m[indexm]) / np.sum(m[indexm])
+zcm = np.sum(z[indexm]*m[indexm]) / np.sum(m[indexm])
     
-    vcmx = vx[np.argmax(m)]
-    vcmy = vy[np.argmax(m)]
-    vcmz = vz[np.argmax(m)]
-else:
-    xcm = np.sum(x[indexm]*m[indexm]) / np.sum(m[indexm])
-    ycm = np.sum(y[indexm]*m[indexm]) / np.sum(m[indexm])
-    zcm = np.sum(z[indexm]*m[indexm]) / np.sum(m[indexm])
-    
-    vcmx = np.sum(vx[indexm]*m[indexm]) / np.sum(m[indexm])
-    vcmy = np.sum(vy[indexm]*m[indexm]) / np.sum(m[indexm])
-    vcmz = np.sum(vz[indexm]*m[indexm]) / np.sum(m[indexm])
+vcmx = np.sum(vx[indexm]*m[indexm]) / np.sum(m[indexm])
+vcmy = np.sum(vy[indexm]*m[indexm]) / np.sum(m[indexm])
+vcmz = np.sum(vz[indexm]*m[indexm]) / np.sum(m[indexm])
 
 # Calculate the radius and velocity wrt the cm.
 
