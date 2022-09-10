@@ -51,9 +51,19 @@ G = ((cons.G)/((un.R_sun.to(un.m)**3))*(un.M_sun.to(un.kg))*((1.8845e-2*86400)**
 
 # Energy calculation for the unbound mass criteria.
 
-E = V**2 - G*Mencl/R
-unb = np.where(E > 0)[0]
-bun = np.where(E <= 0)[0]
+E = V**2 + U - G*Mencl/R
+
+# Determination of the central radius where the potential energy aprox fails.
+
+inner_R = np.where(np.cumsum(E[1:]) < 0)[0][0]
+
+# Bound unbound criteria for the mass.
+
+unb = np.where(E[inner_R:] > 0)[0] + inner_R
+
+bun_fin = np.where(E[inner_R:] <= 0)[0] + inner_R
+bun_ini = np.where(R < R[inner_R])[0]
+bun = np.concatenate((bun_ini,bun_fin))
 
 percent = np.sum(M[unb])*100/np.sum(M)
 
@@ -61,15 +71,6 @@ Mencl_un = np.cumsum(M[unb])
 R_un = R[unb]
 Mencl_bn = np.cumsum(M[bun])
 R_bn = R[bun]
-
-# Generation of the profiles.
-
-np.savetxt('/tank0/ballone/coll_set/{}/'.format(folder)+name+'_R.txt', R)
-np.savetxt('/tank0/ballone/coll_set/{}/'.format(folder)+name+'_Mencl.txt', Mencl)
-np.savetxt('/tank0/ballone/coll_set/{}/'.format(folder)+name+'_R_un.txt', R_un)
-np.savetxt('/tank0/ballone/coll_set/{}/'.format(folder)+name+'_Mencl_un.txt', Mencl_un)
-np.savetxt('/tank0/ballone/coll_set/{}/'.format(folder)+name+'_R_bn.txt', R_bn)
-np.savetxt('/tank0/ballone/coll_set/{}/'.format(folder)+name+'_Mencl_bn.txt', Mencl_bn)
 
 with open('/tank0/ballone/coll_set/{}/Munb_percent.txt'.format(folder), 'a') as myfile:
     myfile.write(str(round(percent,4))+'\t'+name+'\n')
