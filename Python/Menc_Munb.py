@@ -55,7 +55,7 @@ E = V**2 + U - G*Mencl/R
 
 # Determination of the central radius where the potential energy aprox fails.
 
-inner_R = np.where(np.cumsum(E[1:]) < 0)[0][0]
+inner_R = np.where(R > 1.5)[0][0]
 
 # Bound unbound criteria for the mass.
 
