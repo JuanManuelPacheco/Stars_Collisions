@@ -1,159 +1,288 @@
-from astropy import constants as cons
-from astropy import units as un
+from astropy import units
 import numpy as np
 import matplotlib as mpl
-mpl.rcParams['agg.path.chunksize'] = 10000
+mpl.rcParams['agg.path.chunksize'] = 50000
 import matplotlib.pyplot as plt
 import sys
 plt.rcParams.update({'font.size': 20})
 
-folder = sys.argv[1]
-simulation = sys.argv[2]
-name = sys.argv[3]
+import Menc_Munb as Men
 
-x, y, z, vx, vy, vz, m, d, u = np.genfromtxt('/tank0/ballone/coll_set/{}/{}'.format(folder,simulation),
+def angular_momemtum(pos,vel,m):
+    """
+    Calculation of the angular momentum of each particle
+    and the total angular momentum.
+
+    Parameters
+    ----------
+    pos : numpy.ndarray
+        Vector position of the particles.
+    vel : numpy.ndarray
+        Vector velocity of the particles.
+    m : numpy.ndarray
+        Mass of the particles.
+  
+    Returns
+    -------
+    L : numpy.ndarray
+        Vector angular momentum of the particles.
+    Lt : numpy.ndarray
+        Total angular momentum.
+    """
+ 
+    p = m*vel
+    L = np.cross(pos,p, axis = 0)
+    Lt = np.array([np.sum(L[0]),np.sum(L[1]),np.sum(L[2])])
+    
+    return L, Lt
+
+def rotation(Lt,pos,vel):
+    """
+    Rotation of position an velocity of particles to align
+    the z-axis along the total angular momentum.
+
+    Parameters
+    ----------
+    Lt : numpy.ndarray
+        Total angular momentum.
+    pos : numpy.ndarray
+        Vector position of the particles.
+    vel : numpy.ndarray
+        Vector velocity of the particles.
+  
+    Returns
+    -------
+    pos_rot : numpy.ndarray
+        Rotated vector position of the particles.
+    vel_rot : numpy.ndarray
+        Rotated vector velocity of the particles.
+    """
+    
+    if Lt[2] > 0:
+        thx = np.arctan(Lt[1]/Lt[2])
+        Rx = np.array([[1,0,0],[0,np.cos(thx),-np.sin(thx)],[0,np.sin(thx),np.cos(thx)]])
+        thy = -1*np.arctan(Rx.dot(Lt)[0]/Rx.dot(Lt)[2])
+        Ry = np.array([[np.cos(thy),0,np.sin(thy)],[0,1,0],[-np.sin(thy),0,np.cos(thy)]])
+    
+    else:
+        thx = np.arctan(Lt[1]/Lt[2])
+        Rx = np.array([[1,0,0],[0,np.cos(thx),-np.sin(thx)],[0,np.sin(thx),np.cos(thx)]])
+        thy = -1*np.arctan(Rx.dot(Lt)[0]/Rx.dot(Lt)[2]) + np.pi
+        Ry = np.array([[np.cos(thy),0,np.sin(thy)],[0,1,0],[-np.sin(thy),0,np.cos(thy)]])
+        
+    pos_rot = Ry.dot(Rx.dot(pos))
+    vel_rot = Ry.dot(Rx.dot(vel))
+    
+    return pos_rot, vel_rot
+
+def velocities(pos,vel):
+    """
+    Conversion of cartesian coordinates to cylindrical
+    coordinates.
+
+    Parameters
+    ----------
+    pos : numpy.ndarray
+        Vector position of the particles.
+    vel : numpy.ndarray
+        Vector velocity of the particles.
+  
+    Returns
+    -------
+    R : numpy.ndarray
+        Radius of the particles.
+    Vrad : numpy.ndarray
+        Radial velocity of the particles.
+    Vtan : numpy.ndarray
+        Tangential velocity of the particles.
+    Vz : numpy.ndarray
+        Vertical velocity of the particles.
+    """
+    
+    R = np.sqrt(pos[0]**2+pos[1]**2)
+    Vrad = (vel[0]*pos[0]+vel[1]*pos[1])/R
+    Vtan = (vel[1]*pos[0]-vel[0]*pos[1])/R
+    Vz = vel[2]
+        
+    Vrad = Vrad*(units.R_sun.to(units.km))/(1.8845e-2*86400)
+    Vtan = Vtan*(units.R_sun.to(units.km))/(1.8845e-2*86400)
+    Vz = Vz*(units.R_sun.to(units.km))/(1.8845e-2*86400)
+        
+    return R, Vrad, Vtan, Vz
+
+def bining_vel(M,R,Vrad,Vtan,Vz,points):
+    """
+    Bining of the components of velocity along the 
+    radius.
+
+    Parameters
+    ----------
+    M : numpy.ndarray
+        Mass of the particles.
+    R : numpy.ndarray
+        Radius of the particles.
+    Vrad : numpy.ndarray
+        Radial velocity of the particles.
+    Vtan : numpy.ndarray
+        Tangential velocity of the particles.
+    Vz : numpy.ndarray
+        Vertical velocity of the particles.
+    points : int
+        Number of bins needed.
+  
+    Returns
+    -------
+    mean_bin : numpy.ndarray
+        Mean value of the bins.
+    Vr : numpy.ndarray
+        Binned radial velocity of the particles.
+    Vt : numpy.ndarray
+        Binned tangential velocity of the particles.
+    Vz : numpy.ndarray
+        Binned vertical velocity of the particles.
+    """    
+
+    ar = np.histogram(R, bins=points, weights= Vrad*M)
+    at = np.histogram(R, bins=points, weights= Vtan*M)
+    az = np.histogram(R, bins=points, weights= Vz*M)
+    
+    b = np.histogram(R, bins=points, weights= M)
+    
+    Vr = (ar[0]/b[0])
+    Vt = (at[0]/b[0])
+    Vz = (az[0]/b[0])
+    
+    mean_bin = (b[1][1:] + b[1][:-1]) / 2
+    
+    return mean_bin, Vr, Vt, Vz
+
+def mean_vel(M,Vrad,Vtan,Vz):
+    """
+    Computation of mean values and standard deviation of all
+    velocity components, arithmetically and weigthed by the mass of 
+    particles. 
+
+    Parameters
+    ----------
+    M : numpy.ndarray
+        Mass of the particles.
+    R : numpy.ndarray
+        Radius of the particles.
+    Vrad : numpy.ndarray
+        Radial velocity of the particles.
+    Vtan : numpy.ndarray
+        Tangential velocity of the particles.
+    Vz : numpy.ndarray
+        Vertical velocity of the particles.
+  
+    Returns
+    -------
+    mean : numpy.ndarray
+        Mean value of the velocities.
+    std : numpy.ndarray
+        Standard deviation of the velocities.
+    w_mean : numpy.ndarray
+        Weigthed mean value of the velocities.
+    w_std : numpy.ndarray
+        Weigthed standard deviation of the velocities.
+    """
+
+    mn_Vr, mn_Vt, mn_Vz = np.nanmean(Vrad), np.nanmean(Vtan), np.nanmean(Vz)
+    st_Vr, st_Vt, st_Vz = np.nanstd(Vrad), np.nanstd(Vtan), np.nanstd(Vz)
+    
+    mkVr = np.where(~np.isnan(Vrad) == True)[0]
+    mkVt = np.where(~np.isnan(Vtan) == True)[0]
+    mkVz = np.where(~np.isnan(Vz) == True)[0]
+    
+    vr, vt, vz = Vrad[mkVr], Vtan[mkVt], Vz[mkVz]
+    Mr, Mt, Mz = M[mkVr], M[mkVt], M[mkVz]
+    
+    wm_Vr, wm_Vt, wm_Vz = np.average(vr, weights=Mr), np.average(vt, weights=Mt), np.average(vz, weights=Mz)
+    
+    ws_Vr = np.sqrt(np.average((vr-wm_Vr)**2, weights=Mr))
+    ws_Vt = np.sqrt(np.average((vt-wm_Vt)**2, weights=Mt))
+    ws_Vz = np.sqrt(np.average((vz-wm_Vz)**2, weights=Mz))
+    
+    mean = np.array([mn_Vr,mn_Vt,mn_Vz])
+    std = np.array([st_Vr,st_Vt,st_Vz])
+    
+    w_mean = np.array([wm_Vr,wm_Vt,wm_Vz])
+    w_std = np.array([ws_Vr,ws_Vt,ws_Vz])
+    
+    return mean, std, w_mean, w_std
+
+if __name__=="__main__":
+
+    folder = sys.argv[1]  # Folder of each simulation.
+    simulation = sys.argv[2] # Path of the ascii file.
+    name = sys.argv[3]  # Snapshot name.
+
+    x, y, z, vx, vy, vz, m, d, u = np.genfromtxt('/tank0/ballone/coll_set/{}/{}'.format(folder,simulation),
                                           usecols= (0,1,2,3,4,5,6,7,8), unpack=True)
 
-# Calculate the position and velocity of the center of mass.
+    # Calculate the position and velocity wrt the center of mass.
 
-xcm = x[np.argmax(d)]
-ycm = y[np.argmax(d)]
-zcm = z[np.argmax(d)]
+    nw_x, nw_y, nw_z, nw_vx, nw_vy, nw_vz = Men.re_center(x,y,z,vx,vy,vz,d)
 
-vcmx = vx[np.argmax(d)]
-vcmy = vy[np.argmax(d)]
-vcmz = vz[np.argmax(d)]
+    # Reordering of all quantities based on Radius sorting from lower to higher.
 
-new_x = (x-xcm)
-new_y = (y-ycm)
-new_z = (z-zcm)
+    X, Y, Z, VX, VY, VZ, R, V, M, U = Men.re_order(nw_x,nw_y,nw_z,nw_vx,nw_vy,nw_vz,m,u)
 
-new_vx = (vx-vcmx)
-new_vy = (vy-vcmy)
-new_vz = (vz-vcmz)
+    # Generation of the enclosed mass profile and total mass.
 
-# Calculate the radius and velocity wrt the cm.
+    Mt, M_enc = Men.mass_quantities(M)
 
-r = np.sqrt(new_x**2 + new_y**2 + new_z**2)
-v = np.sqrt(new_vx**2 + new_vy**2 + new_vz**2)
+    # Energy calculation for the unbound mass definition.
 
-# Index sorting the radius from lower to higher.
+    e = Men.energy(V,U,R,M_enc)
 
-index = np.argsort(r)
+    # Aplication of bound-unbound criteria.
 
-# Reordering of all quantities based on Radius.
+    bn, un = Men.bound_unbound(R,e)
 
-X = new_x[index]
-Y = new_y[index]
-Z = new_z[index]
+    # Calculation of the angular momentum for the bounded particles.
 
-VX = new_vx[index]
-VY = new_vy[index]
-VZ = new_vz[index]
+    pos_bn, vel_bn = np.array([X[bn],Y[bn],Z[bn]]), np.array([VX[bn],VY[bn],VZ[bn]])
 
-R = r[index]
-V = v[index]
+    L_bn, Lt_bn = angular_momemtum(pos_bn,vel_bn,M[bn])
 
-U = u[index]
-M = m[index]
+    # Rotation to align z vector along the bounded angular momentum.
 
-# Generation of the enclosed mass profile.
+    pos_bn_rot, vel_bn_rot = rotation(Lt_bn,pos_bn,vel_bn)
 
-Mencl = np.cumsum(M)
+    # Conversion to a cylindrical coordinate system.
 
-# Unit conversion for the gravitational constant.
+    R, Vrad, Vtan, Vz = velocities(pos_bn_rot, vel_bn_rot)
 
-G = ((cons.G)/((un.R_sun.to(un.m)**3))*(un.M_sun.to(un.kg))*((1.8845e-2*86400)**2)).value
+    # Computation of the mean and standard deviation of all
+    # components of the velocity.
 
-# Energy calculation for the unbound mass criteria.
+    mean, std, w_mean, w_std = mean_vel(M[bn],Vrad,Vtan,Vz)
 
-E = V**2 + U - G*Mencl/R
+    with open('/tank0/ballone/coll_set/{}/L_evo.txt'.format(folder), 'a') as myfile:
+              myfile.write(str(mean[0])+'\t'+ str(mean[1])+'\t'+str(mean[2])+'\t'+
+              str(std[0])+'\t'+ str(std[1])+'\t'+ str(std[2])+ str(w_mean[0])+'\t'+
+              str(w_mean[1])+'\t'+str(w_mean[2])+'\t'+ str(w_std[0])+'\t'+
+              str(w_std[1])+'\t'+ str(w_std[2])+'\t'+name+'\n')
 
-# Determination of the central radius where the potential energy aprox fails.
+    #Generation of the histogram for Vr and Vtan.
 
-inner_R = np.where(R > 1.5)[0][0]
+    mean_bin, Vr, Vt, Vz = bining_vel(M[bn],R,Vrad,Vtan,Vz,150)
 
-# Bound unbound criteria for the mass.
+    np.savetxt('/tank0/ballone/coll_set/{}/Vel_'.format(folder)+name+'.txt',
+               np.array([mean_bin,Vr,Vt,Vz]), delimiter='\t')
 
-unb = np.where(E[inner_R:] > 0)[0] + inner_R
+    #Producing the final figure.
 
-bun_fin = np.where(E[inner_R:] <= 0)[0] + inner_R
-bun_ini = np.where(R < R[inner_R])[0]
-bun = np.concatenate((bun_ini,bun_fin))
+    fig = plt.figure(figsize=(10, 7))
+ 
+    plt.plot(mean_bin,Vr,'-b', label = r'$V_{r}$')
+    plt.plot(mean_bin,Vt,'-r', label = r'$V_{\theta}$')
+    plt.plot(mean_bin,Vz,'-g', label = r'$V_{z}$')
 
-# Calculation of the angular momentum for the bounded particles.
+    plt.xlabel("$R$ $[R_{\odot}]$")
+    plt.ylabel("$V$ $[km/s]$")
+    plt.legend()
 
-Pos_bn = np.array([X[bun],Y[bun],Z[bun]])
-Vel_bn = np.array([VX[bun],VY[bun],VZ[bun]])
-P_bn = M[bun]*Vel_bn
-
-L_bn = np.cross(Pos_bn,P_bn, axis = 0)
-
-Lt_bn = np.array([np.sum(L_bn[0]),np.sum(L_bn[1]),np.sum(L_bn[2])])
-
-#Generation of the rotation matrices.
-
-if Lt_bn[2] > 0:
-    thx = np.arctan(Lt_bn[1]/Lt_bn[2])
-    Rx = np.array([[1,0,0],[0,np.cos(thx),-np.sin(thx)],[0,np.sin(thx),np.cos(thx)]])
-    thy = -1*np.arctan(Rx.dot(Lt_bn)[0]/Rx.dot(Lt_bn)[2])
-    Ry = np.array([[np.cos(thy),0,np.sin(thy)],[0,1,0],[-np.sin(thy),0,np.cos(thy)]])
-    
-else:
-    thx = np.arctan(Lt_bn[1]/Lt_bn[2])
-    Rx = np.array([[1,0,0],[0,np.cos(thx),-np.sin(thx)],[0,np.sin(thx),np.cos(thx)]])
-    thy = -1*np.arctan(Rx.dot(Lt_bn)[0]/Rx.dot(Lt_bn)[2]) + np.pi
-    Ry = np.array([[np.cos(thy),0,np.sin(thy)],[0,1,0],[-np.sin(thy),0,np.cos(thy)]])
-
-# Rotation to align z vector along the bounded angular momentum.
-
-Pos_bn_rot = Ry.dot(Rx.dot(Pos_bn))
-Vel_bn_rot = Ry.dot(Rx.dot(Vel_bn))
-P_bn_rot = M[bun]*Vel_bn_rot
-
-# Conversion to a cylindrical coordinate system.
-
-R_bn_rot = np.sqrt(Pos_bn_rot[0]**2+Pos_bn_rot[1]**2)
-Vrad = (Vel_bn_rot[0]*Pos_bn_rot[0]+Vel_bn_rot[1]*Pos_bn_rot[1])/R_bn_rot
-Vtan = (Vel_bn_rot[1]*Pos_bn_rot[0]-Vel_bn_rot[0]*Pos_bn_rot[1])/R_bn_rot
-Vz = Vel_bn_rot[2]
-
-#Conversion to km/s units.
-
-Vrad = Vrad*(un.R_sun.to(un.km))/(1.8845e-2*86400)
-Vtan = Vtan*(un.R_sun.to(un.km))/(1.8845e-2*86400)
-Vz = Vz*(un.R_sun.to(un.km))/(1.8845e-2*86400)
-
-with open('/tank0/ballone/coll_set/{}/L_evo.txt'.format(folder), 'a') as myfile:
-    myfile.write(str(np.mean(Vrad[1:]))+'\t'+ str(np.mean(Vtan[1:]))+'\t'+
-                 str(np.mean(Vz[1:]))+'\t'+ str(np.std(Vrad[1:]))+'\t'+ 
-                 str(np.std(Vtan[1:]))+'\t'+ str(np.std(Vz[1:]))+'\t'+name+'\n')
-
-#Generation of the histogram for Vr and Vtan.
-
-at = np.histogram(R_bn_rot, bins=100,  weights= Vtan*M[bun])
-bt = np.histogram(R_bn_rot, bins=100,  weights= M[bun])
-Velt = (at[0]/bt[0])
-mean_bint = (at[1][1:] + at[1][:-1]) / 2
-
-ar = np.histogram(R_bn_rot, bins=100,  weights= Vrad*M[bun])
-br = np.histogram(R_bn_rot, bins=100,  weights= M[bun])
-Velr = (ar[0]/br[0])
-mean_binr = (ar[1][1:] + ar[1][:-1]) / 2
-
-#Producing the final figure.
-
-fig = plt.figure(figsize=(10, 7))
-
-plt.plot(mean_binr,Velr,'-b', label = r'$V_{r}$')
-plt.plot(mean_bint,Velt,'-r', label = r'$V_{\theta}$')
-
-plt.xlabel("$R$ $[R_{\odot}]$")
-plt.ylabel("$V$ $[km/s]$")
-plt.grid()
-plt.legend()
-
-plt.tight_layout()
-plt.savefig('/tank0/ballone/coll_set/{}/Vel_'.format(folder)+name+'.png')
-
-
+    plt.tight_layout()
+    plt.savefig('/tank0/ballone/coll_set/{}/Vel_'.format(folder)+name+'.png')
