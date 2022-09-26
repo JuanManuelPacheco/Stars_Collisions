@@ -228,6 +228,9 @@ if __name__=="__main__":
 
     percent = np.sum(M[un])*100/Mt
 
+    with open('/tank0/ballone/coll_set/{}/Munb_percent.txt'.format(folder), 'a') as myfile:
+              myfile.write(str(round(percent,4))+'\t'+name+'\n')
+
     # Generation of the enclosed unbound and bound mass profile.
 
     Mencl_un = np.cumsum(M[un])
@@ -236,12 +239,21 @@ if __name__=="__main__":
     Mencl_bn = np.cumsum(M[bn])
     R_bn = R[bn]
 
-    with open('/tank0/ballone/coll_set/{}/Munb_percent.txt'.format(folder), 'a') as myfile:
-              myfile.write(str(round(percent,4))+'\t'+name+'\n')
+    # Due to the size of the array is needed the decomposition in order to save
+    # all the mass profiles.
+
+    np.savetxt('/tank0/ballone/coll_set/{}/Total_'.format(folder)+name+'.txt',
+               np.array([R,M_enc]), delimiter='\t')
+
+    np.savetxt('/tank0/ballone/coll_set/{}/Unb_'.format(folder)+name+'.txt',
+               np.array([R_un,Mencl_un]), delimiter='\t')
+
+    np.savetxt('/tank0/ballone/coll_set/{}/Bun_'.format(folder)+name+'.txt',
+               np.array([R_bn,Mencl_bn]), delimiter='\t')
 
     fig = plt.figure(figsize=(10, 7))
 
-    plt.plot(R,M_encl,'.k', label='Total mass')
+    plt.plot(R,M_enc,'.k', label='Total mass')
     plt.plot(R_un,Mencl_un,'.r', label='Unbound mass')
     plt.plot(R_bn,Mencl_bn,'.g', label='Bound mass')
     plt.xlabel("$R$ [$R_{\odot}$]")
