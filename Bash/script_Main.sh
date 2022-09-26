@@ -7,12 +7,12 @@ do
     do
 	name=$(echo ${output} | cut -f 1 -d '.')
 
-	if [ -f "./${name}.png" ]
+	if [ -f "./Vel_${name}.png" ]
 	then
             echo "Existing png"
 	else
             echo "Creating the png: " ${name}
-            python ../Menc_Munb.py ${F} ${output} ${name}
+            python ../Main.py ${F} ${output} ${name}
         fi
     done
     cd ..

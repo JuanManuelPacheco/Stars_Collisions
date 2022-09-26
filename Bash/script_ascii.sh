@@ -1,10 +1,13 @@
-Folder='coll_b0.1'
-for output in $(ls ${Folder}/*.sph | xargs -n 1 basename)
+Folder=('coll_Renzo_refosco' 'coll_b0.1' 'coll_b1' 'coll_noangm_v100' 'coll_noangm_v500')
+
+for F in "${Folder[@]}"
 do
-echo "Creating the ascii file: " ${output}
+    cd ${F}/
+    for output in $(ls out*.sph | xargs -n 1 basename)
+    do
+        echo "Creating the ascii file: " ${output}
 
-#name=$(echo ${output} | cut -f 1 -d '.')
-#python Setup/velocity_curves.py ${simulation}/ ${name}
-
-splash -f starsmasher to ascii ${output}
+        splash -f starsmasher to ascii ${output}
+    done
+    cd ..
 done
