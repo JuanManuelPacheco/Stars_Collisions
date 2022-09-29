@@ -14,7 +14,9 @@ The central goal of the project was to analyze a set of star collision simulatio
 
 * **Bash:** This folder contains all the bash scripts generated in the development of this project. *script_ascii.sh* produce the ascii files for all the snapshots using **splash**, *script_Menc.sh* applies the *Menc_Munb.py* module on all the ascii files previously produced, *script_L.sh* applies the *L_evo.py* module and finally  *script_Main.sh* applies the *Main.py* module.  
 
-* **Data:** This folder contains the main .txt files produced by the aplication of the bash scripts over all snapshots divided by folders of each simulation. The file *legend.txt* contains the explanation of all the main characteristics of each collision simulated.
+* **Data:** This folder contains the main .txt files produced by the aplication of the bash scripts over all snapshots divided by folders of each simulation and the video for the evolution during the collisions. The file *legend.txt* contains the explanation of all the main characteristics of each collision simulated.
+
+* **References:** This folder contains all the pdf's of the references used in the development of this project.
 
 * **Python:** This folder contains all the .py files generated in the development of this project. *Menc_Munb.py* computes the mass profiles for all the snapshots, *L_evo.py* calculates the radial, tangential and vertical velocity of each simulation, and *Main.py* module performs all these calculations on one shot.  
 
