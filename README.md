@@ -18,6 +18,4 @@ The central goal of the project was to analyze a set of star collision simulatio
 
 * **Python:** This folder contains all the .py files generated in the development of this project. *Menc_Munb.py* computes the mass profiles for all the snapshots, *L_evo.py* calculates the radial, tangential and vertical velocity of each simulation, and *Main.py* module performs all these calculations on one shot.  
 
-* **Mass_unbound:** This jupyter notebook was generated as the first part of the report needed in the presentation of this project. It contains all the explanations and documentation on the functions and procedures needed to achieve the first objective.
-
-* **Angular_momentum:** This jupyter notebook was generated as the second part of the report. It contains all the explanations and documentation on the functions and procedures needed to achieve the second objective.
+* **Stars_collisions:** This jupyter notebook was generated as the report needed in the presentation of this project. It contains all the explanations and documentation on the functions and procedures needed to achieve the main objectives.
