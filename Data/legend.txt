@@ -9,15 +9,11 @@ coll_Renzo_refosco
 	2 stars, same profiles as in Renzo et al. (2021). Radial
 	orbit.
 
-coll_noangm_v100
-
+coll_Halfres
+	
 	Same 2 stars as in Ballone et al. (2022). Radial orbit
-	with velocity at infinity = 100 km/s
-
-coll_noangm_v500
-
-	Same 2 stars as in Ballone et al. (2022). Radial orbit
-	with velocity at infinity = 500 km/s
+	with velocity at infinity = 10 km/s, with half of the SPH
+        particles.
 
 coll_b0.1
 
@@ -28,3 +24,26 @@ coll_b1
 
 	Same 2 stars as in Ballone et al. (2022). Non radial
 	orbit with periastron distance b = 1 Rsun.
+
+coll_b3
+
+	Same 2 stars as in Ballone et al. (2022). Non radial
+	orbit with periastron distance b = 3 Rsun.
+
+coll_noangm_v10
+
+	Same 2 stars as in Ballone et al. (2022). Radial orbit
+	with velocity at infinity = 10 km/s
+
+
+coll_noangm_v100
+
+	Same 2 stars as in Ballone et al. (2022). Radial orbit
+	with velocity at infinity = 100 km/s
+
+coll_noangm_v500
+
+	Same 2 stars as in Ballone et al. (2022). Radial orbit
+	with velocity at infinity = 500 km/s
+
+
