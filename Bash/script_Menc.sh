@@ -1,4 +1,4 @@
-Folder=('coll_4Myr' 'coll_Renzo_refosco' 'coll_b0.1' 'coll_b1' 'coll_noangm_v100' 'coll_noangm_v500')
+Folder=('4Myr' 'Renzo' 'Halfres' 'b0.1' 'b1' 'b3' 'v10' 'v100' 'v500')
 
 for F in "${Folder[@]}"
 do
