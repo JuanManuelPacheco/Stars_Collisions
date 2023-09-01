@@ -19,3 +19,5 @@ This repository was created to record and save the progress on the thesis projec
 * **Python:** This folder contains all the .py files generated in the development of this project. *Assignation.py* associates each particle of the final collisional snapshot to its respective initial star and calculates the fraction of hydrogen and helium corresponding to it, *Energy_Computation.py* calculates the total and approximate energy of each particle sph for comparison, *Entropy.py* calculates the entropic variable of each of the particles in the desired snapshot,  *Menc_Munb.py* computes the mass profiles for all the snapshots, *L_evo.py* calculates the radial, tangential and vertical velocity of each simulation, and *Main.py* module performs all these calculations on one shot.  
 
 * **Notebooks:** This folder contains all the  jupyter notebook generated for this project.
+  
+* **Master_Thesis.pdf:** This is the final pdf file submitted for the evalutation of the committee to obatin the Master's degree.
