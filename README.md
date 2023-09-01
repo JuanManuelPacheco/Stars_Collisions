@@ -2,7 +2,7 @@
 
 [![Up to Date](https://github.com/ikatyang/emoji-cheat-sheet/workflows/Up%20to%20Date/badge.svg)](https://github.com/JuanManuelPacheco/Star_Collisions/actions)
 
-This repository was created to record and save the progress on the thesis project part of the Master in Astrophysics and Cosmology of the University of Padova during the 2021-2023 year.
+This repository was created to record and save the progress on the thesis project part of the Master in Astrophysics and Cosmology of the University of Padova during the 2022-2023 year.
 
 * The goal of this master thesis is to follow the hybrid methodology, proposed by *Ballone, et al. (2023)* and *Costa, et al. (2022)*, to explore other types of stellar collisions by the analisis of a set of star collision simulations generated using the SPH **StarSmasher** code. The idea is to vary the evolutionary stages of both stars before the encounter and the orbital parameters of the collision, identifying the influence they have on the post-coalescing stellar structure. Finally, the parameter space of the stellar collisions formation channel is expected to be explored in more detail throughout this thesis thanks to the generation and analysis of a set of stellar profiles and hydrodynamical collisions, concluding with the necessary characteristics to populate the pair-instability mass gap with black holes generated through the encounter of massive stars in young stellar clusters.
 
